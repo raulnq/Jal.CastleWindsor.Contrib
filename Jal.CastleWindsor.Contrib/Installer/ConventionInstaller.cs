@@ -8,11 +8,11 @@ namespace Jal.CastleWindsor.Contrib.Installer
 {
     public class ConventionInstaller: IWindsorInstaller
     {
-        private readonly Func<FromAssemblyDescriptor, BasedOnDescriptor> _installerSetup;
+        private readonly Func<Assembly, BasedOnDescriptor> _installerSetup;
 
         private readonly Assembly[]  _installerSourceAssemblies;
   
-        public ConventionInstaller(Assembly[] installerSourceAssemblies, Func<FromAssemblyDescriptor, BasedOnDescriptor> installerSetup)
+        public ConventionInstaller(Assembly[] installerSourceAssemblies, Func<Assembly, BasedOnDescriptor> installerSetup=null)
         {
             _installerSourceAssemblies = installerSourceAssemblies;
             _installerSetup = installerSetup;
@@ -26,15 +26,14 @@ namespace Jal.CastleWindsor.Contrib.Installer
             {
                 foreach (var assembly in assemblies)
                 {
-                    var fromAssemblyDescriptor = Classes.FromAssembly(assembly);
-
-                    var serviceDescriptor = fromAssemblyDescriptor.Pick();
-
-                    if (_installerSetup != null)
+                    if (_installerSetup == null)
                     {
-                        serviceDescriptor = _installerSetup(fromAssemblyDescriptor);
+                        container.Register(Classes.FromAssembly(assembly).Pick());
                     }
-                    container.Register(serviceDescriptor);
+                    else
+                    {
+                        container.Register(_installerSetup(assembly));
+                    }
                 }
             }
         }
